@@ -2,10 +2,16 @@
 requires        = ["setuptools>=61.0"]
 build-backend   = "setuptools.build_meta"
 
+[tool.setuptools]
+packages = ["parxel"]
+
+[tool.setuptools.package-dir]
+"" = "source"
+
 [project]
 name            = "parxel"
 version         = "0.0.1"
-requires-python = ">=3.8"
+requires-python = ">=3.12"
 description     = "A small lexer and parser utility library"
 readme          = "README.md"
 authors         = [ { name="styinx" } ]
