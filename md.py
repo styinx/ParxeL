@@ -7,9 +7,9 @@ from parxel.parser import Parser
 
 
 # Markdown specific tokens
-TK.TargetName = [TK.Number, TK.Word, TK.Period, TK.Slash, TK.Minus]
+TK.TargetName = [TK.Number, TK.Word, TK.Period, TK.Slash, TK.Minus, TK.Colon]
 TK.Text = [TK.Space, TK.HorizontalTabulator, TK.Symbol, TK.Number, TK.Word, TK.ParanthesisOpen,
-           TK.ParanthesisClose, TK.Period, TK.Slash, TK.Minus, TK.QuotationMark, TK.Asterisk]
+           TK.ParanthesisClose, TK.Period, TK.Slash, TK.Minus, TK.QuotationMark, TK.Asterisk, TK.Colon]
 TK.ReferenceText = [TK.Number, TK.Word] + TK.Whitespaces
 
 
@@ -138,7 +138,7 @@ class MD(Document, Parser):
             elif self.get().type in TK.Text:
                 self.parse_text()
             else:
-                self.error(TK.Null)
+                self.error(TK.Undefined)
 
         elif self.state[-1] == MD.State.Heading:
             if self.get().type == TK.SquareBracketOpen:
@@ -152,7 +152,7 @@ class MD(Document, Parser):
             elif self.get().type == TK.LineFeed:
                 return
             else:
-                self.error(TK.Null)
+                self.error(TK.Undefined)
 
         elif self.state[-1] == MD.State.List:
             if self.get().type == TK.SquareBracketOpen:
@@ -166,7 +166,7 @@ class MD(Document, Parser):
             elif self.get().type in TK.Text:
                 self.parse_text()
             else:
-                self.error(TK.Null)
+                self.error(TK.Undefined)
 
         elif self.state[-1] == MD.State.Table:
             if self.get().type in TK.Text:
@@ -180,7 +180,7 @@ class MD(Document, Parser):
             elif self.get().type == TK.VerticalBar:
                 return
             else:
-                self.error(TK.Null)
+                self.error(TK.Undefined)
 
     def parse_text(self):
         self.consume_while_any(TK.Text)
@@ -354,5 +354,6 @@ if __name__ == '__main__':
         sys.exit(1)
 
     node.print(properties=True)
+    node.print()
 
     sys.exit(0)
