@@ -16,7 +16,7 @@ class Node:
         self.children.append(other)
 
     def enter_scope(self, other) -> None:
-        self.add(other)
+        self.scope.add(other)
         self.scope = other
 
     def exit_scope(self) -> None:
