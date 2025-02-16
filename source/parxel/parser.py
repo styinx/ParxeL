@@ -1,5 +1,6 @@
 from io import FileIO, StringIO
 from pathlib import Path
+from logging import Logger, getLogger
 from parxel.token import Token, TK
 from parxel.iterator import Iterator
 from parxel.nodes import Node, Document
@@ -7,7 +8,18 @@ from parxel.lexer import Lexer
 
 
 class Parser(Iterator):
-    def __init__(self, tokens: list[Token] = None, root: Node = None, filename: str = None, filepath: Path = None, file: FileIO = None, stream: StringIO = None):
+    def __init__(self,
+        tokens: list[Token] = None,
+        root: Node = None,
+        filename: str = None,
+        filepath: Path = None,
+        file: FileIO = None,
+        stream: StringIO = None,
+        logger: Logger = None):
+
+        if not logger:
+            logger = getLogger(__name__)
+        self.logger = logger
 
         if filename:
             filepath = Path(filename)
@@ -104,4 +116,18 @@ class Parser(Iterator):
         raise Exception(msg)
 
     def parse(self) -> Node | Document:
+        if self.filepath:
+            self.logger.debug(f'Processing {self.filepath} ...')
+        return self.parse_format()
+    
+    def parse_format(self):
         raise NotImplementedError('Implement the "parse" method!')
+    
+    @staticmethod
+    def read(cls: type, filename: str = None, filepath: Path = None, file: FileIO = None, stream: StringIO = None):
+
+        lexer = Lexer(filename, filepath, file, stream)
+        tokens: list[Token] = lexer.tokenize()
+
+        obj = cls(filepath, tokens)
+        return obj.parse()

@@ -1,7 +1,7 @@
 from io import FileIO, StringIO
 from pathlib import Path
-from parxel.token import Token, TK
-from parxel.iterator import Iterator
+from .token import Token, TK
+from .iterator import Iterator
 
 
 def is_alpha(c: str) -> bool:
@@ -19,6 +19,10 @@ def is_alpha_numeric(c: str) -> bool:
 
 
 class Lexer(Iterator):
+    class EmptyStreamException(Exception):
+        def __init__(self, *args):
+            super().__init__(*args)
+
     def __init__(self, filename: str = None, filepath: Path = None, file: FileIO = None, stream: StringIO = None):
 
         if filename:
@@ -31,7 +35,7 @@ class Lexer(Iterator):
             stream = file.read()
         
         if not stream:
-            raise Exception('No input')
+            raise Lexer.EmptyStreamException('No input given to lexer!')
 
         Iterator.__init__(self, iterable=stream)
 

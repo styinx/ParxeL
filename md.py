@@ -112,7 +112,7 @@ class MD(Document, Parser):
 
         self.state: list[MD.State] = [MD.State.Start]
 
-    def parse(self):
+    def parse_format(self):
         while self:
             self.parse_nodes()
 
