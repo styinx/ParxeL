@@ -1,5 +1,6 @@
 from pathlib import Path
 from parxel.token import Token
+from networkx import Graph
 
 
 class Node:

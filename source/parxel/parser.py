@@ -8,6 +8,14 @@ from parxel.lexer import Lexer
 
 
 class Parser(Iterator):
+    class EmptyStreamException(Exception):
+        def __init__(self, *args):
+            super().__init__(*args)
+
+    class UnexpectedTokenException(Exception):
+        def __init__(self, *args):
+            super().__init__(*args)
+
     def __init__(self,
         tokens: list[Token] = None,
         root: Node = None,
@@ -31,7 +39,7 @@ class Parser(Iterator):
             stream = file.read()
         
         if not stream:
-            raise Exception('No input')
+            raise Parser.EmptyStreamException('No input given to parser!')
 
         if not tokens:
             lexer = Lexer(filename=filename, filepath=filepath, file=file, stream=stream)
@@ -104,8 +112,7 @@ class Parser(Iterator):
         t: Token = self.get()
         tokens = self.buffer[self.nend:self.pos + 1]
         text = "".join(list(map(lambda x: x.text, tokens)))
-        indent = len(text[text.rfind(nl)]) if text.find(
-            '\n') > -1 else len(text) - len(tokens[-1].text)
+        indent = len(text[text.rfind(nl)]) if text.find('\n') > -1 else len(text) - len(tokens[-1].text)
 
         msg = f'\n\n{self.filepath.absolute()}: Line {t.row} Col {t.col}\n\n'
         msg += f'{text}\n'
@@ -113,7 +120,7 @@ class Parser(Iterator):
         msg += f'Expected \'{expected}\' got \'{tokens[-1].text}\'\n'
         msg += f'Last tokens: {self.tokens()}\n'
 
-        raise Exception(msg)
+        raise Parser.UnexpectedTokenException(msg)
 
     def parse(self) -> Node | Document:
         if self.filepath:
@@ -121,9 +128,9 @@ class Parser(Iterator):
         return self.parse_format()
     
     def parse_format(self):
-        raise NotImplementedError('Implement the "parse" method!')
+        raise NotImplementedError('Implement the "parse_format" method!')
     
-    @staticmethod
+    @classmethod
     def read(cls: type, filename: str = None, filepath: Path = None, file: FileIO = None, stream: StringIO = None):
 
         lexer = Lexer(filename, filepath, file, stream)
