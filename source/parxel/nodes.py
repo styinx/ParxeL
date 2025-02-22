@@ -1,4 +1,5 @@
 from pathlib import Path
+from hashlib import md5
 from parxel.token import Token
 from networkx import Graph
 
@@ -11,6 +12,18 @@ class Node:
 
     def type(self) -> str:
         return self.__class__.__name__
+    
+    def hash(self, *tweak: str):
+        hash_string = ''
+        hash_string += self.type()
+        hash_string += ''.join(str(arg) for arg in tweak if arg is not None)
+        hash_string += str(len(self.children))
+        hash_string += ''.join(set(map(lambda x : x.type(), self.children)))
+
+        for child in self.children:
+            hash_string += child.hash()
+        
+        return md5(hash_string.encode('utf-8')).hexdigest()
 
     def add(self, other) -> None:
         other.parent = self
@@ -47,6 +60,9 @@ class Folder(Node):
         Node.__init__(self, parent=parent)
 
         self.path: Path = path
+    
+    def hash(self, *tweak: str):
+        return super().hash(str(self.path), tweak)
 
 
 class Document(Node):
@@ -54,6 +70,9 @@ class Document(Node):
         Node.__init__(self, parent=parent)
 
         self.filepath: Path = filepath
+    
+    def hash(self, *tweak: str):
+        return super().hash(str(self.filepath), tweak)
 
 
 class LexicalNode(Node):
@@ -61,6 +80,9 @@ class LexicalNode(Node):
         Node.__init__(self, parent=parent)
 
         self.tokens: list[Token] = tokens
+    
+    def hash(self, *tweak: str):
+        return super().hash(self.raw(), tweak)
 
     def raw(self) -> str:
         return ''.join(list(map(lambda x: x.text, self.tokens)))

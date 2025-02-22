@@ -360,23 +360,16 @@ if __name__ == '__main__':
         import networkx as nx
         from networkx.drawing.nx_agraph import graphviz_layout
         import matplotlib.pyplot as plt
-        from random import random
         d = {}
-        def graph(n: Node, g: nx.Graph, p = None):
-            if n.__class__.__name__ not in d:
-                d[n.__class__.__name__] = 0
-            else:
-                d[n.__class__.__name__] += 1
-            name = n.__class__.__name__ + str(d[n.__class__.__name__])
-            g.add_node(name)
-            if p:
-                g.add_edge(p, name)
+        def graph(n: Node, g: nx.Graph):
+            g.add_node(n)
             for c in n.children:
-                graph(c, g, name)
+                graph(c, g)
+                g.add_edge(n, c)
         g = nx.Graph()
         graph(node, g)
         pos=graphviz_layout(g, prog='dot')
-        nx.draw_networkx(g, pos=pos)
+        nx.draw_networkx(g, pos=pos, labels={n:n.type() + '\n' + n.hash()[:6] for n in g.nodes})
         plt.show()
     except Exception as e:
         print(e)
