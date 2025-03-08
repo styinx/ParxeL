@@ -39,7 +39,9 @@ class Parser(Iterator):
             stream = file.read()
         
         if not stream:
-            raise Parser.EmptyStreamException('No input given to parser!')
+            file_name = '' if file is None else f'"{file.name}"'
+            self.logger.error(f'Empty stream {file_name}')
+            raise Parser.EmptyStreamException(f'No input given to parser! f{file_name}')
 
         if not tokens:
             lexer = Lexer(filename=filename, filepath=filepath, file=file, stream=stream)
@@ -120,6 +122,7 @@ class Parser(Iterator):
         msg += f'Expected \'{expected}\' got \'{tokens[-1].text}\'\n'
         msg += f'Last tokens: {self.tokens()}\n'
 
+        self.logger.error(f'Unexpected token {self.filepath}: Expected \'{expected}\' got \'{tokens[-1].text}\'')
         raise Parser.UnexpectedTokenException(msg)
 
     def parse(self) -> Node | Document:
