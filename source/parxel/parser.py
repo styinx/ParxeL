@@ -7,7 +7,53 @@ from parxel.nodes import Node, Document
 from parxel.lexer import Lexer
 
 
-class Parser(Iterator):
+class BinaryParser(Iterator):
+    def __init__(self,
+        bytes: bytes = None,
+        root: Node = None,
+        filename: str = None,
+        filepath: Path = None,
+        file: FileIO = None,
+        logger: Logger = None):
+
+        if not logger:
+            logger = getLogger(__name__)
+        self.logger = logger
+
+        if filename:
+            filepath = Path(filename)
+
+        if filepath:
+            file = filepath.open('rb')
+        
+        if file:
+            bytes = file.read()
+
+        Iterator.__init__(self, iterable=bytes)
+
+        if filepath:
+            self.filepath: Path = filepath
+            self.root = Document(filepath)
+        else:
+            self.root = Node()
+        
+        if root:
+            self.root = root
+
+        # Current Node
+        self.nbeg: int = 0
+        self.nend: int = 0
+    
+    def consumen(self, len: int) -> bool:
+        self.advance(len)
+    
+    def collect_bytes(self) -> bytes:
+        self.nbeg = self.nend  # End of last node
+        self.nend = self.pos  # End of current node
+        return self.buffer[self.nbeg:self.nend]
+
+
+class TextParser(Iterator):
     class EmptyStreamException(Exception):
         def __init__(self, *args):
             super().__init__(*args)
@@ -41,7 +87,7 @@ class Parser(Iterator):
         if not stream:
             file_name = '' if file is None else f'"{file.name}"'
             self.logger.error(f'Empty stream {file_name}')
-            raise Parser.EmptyStreamException(f'No input given to parser! f{file_name}')
+            raise TextParser.EmptyStreamException(f'No input given to parser! f{file_name}')
 
         if not tokens:
             lexer = Lexer(filename=filename, filepath=filepath, file=file, stream=stream)
@@ -123,7 +169,7 @@ class Parser(Iterator):
         msg += f'Last tokens: {self.tokens()}\n'
 
         self.logger.error(f'Unexpected token {self.filepath}: Expected \'{expected}\' got \'{tokens[-1].text}\'')
-        raise Parser.UnexpectedTokenException(msg)
+        raise TextParser.UnexpectedTokenException(msg)
 
     def parse(self) -> Node | Document:
         if self.filepath:

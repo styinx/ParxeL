@@ -96,3 +96,13 @@ class LexicalNode(Node):
                     print(f'{" " * level}- {k:20s} {v}')
         for c in self.children:
             c.print(level + 1, properties)
+
+
+class BinaryNode(Node):
+    def __init__(self, blob: bytes, parent: Node = None):
+        Node.__init__(self, parent=parent)
+
+        self.bytes: bytes = blob
+    
+    def hash(self, *tweak: str):
+        return super().hash(self.bytes, tweak)
