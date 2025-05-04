@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from parxel.nodes import Node, Document, LexicalNode
 from parxel.token import Token, TK
-from parxel.parser import Parser
+from parxel.parser import TextParser
 
 
 # Markdown specific tokens
@@ -96,7 +96,7 @@ class TableCell(Node):
         super().__init__(parent)
 
 
-class MD(Document, Parser):
+class MD(Document, TextParser):
     RE_ALGINMENT = re.compile('((:?-+:?)+)')
 
     class State:
@@ -108,7 +108,7 @@ class MD(Document, Parser):
 
     def __init__(self, filepath: Path):
         Document.__init__(self, filepath=filepath)
-        Parser.__init__(self, root=self, filepath=filepath)
+        TextParser.__init__(self, root=self, filepath=filepath)
 
         self.state: list[MD.State] = [MD.State.Start]
 
@@ -353,8 +353,8 @@ if __name__ == '__main__':
     else:
         sys.exit(1)
 
-    node.print(properties=True)
-    node.print()
+    print(node.dump(properties=True))
+    print(node.dump())
 
     try:
         import networkx as nx

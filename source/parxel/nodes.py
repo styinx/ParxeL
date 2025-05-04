@@ -10,6 +10,9 @@ class Node:
         self.children: list[Node] = []
         self.scope: Node = self
 
+        if parent:
+            parent.add(self)
+
     def type(self) -> str:
         return self.__class__.__name__
     
@@ -39,14 +42,14 @@ class Node:
     def add_to_scope(self, other) -> None:
         self.scope.add(other)
 
-    def print(self, level: int = 0, properties: bool = False) -> None:
-        print(f'{" " * level}{self.__class__.__name__:20s}')
+    def dump(self, level: int = 0, properties: bool = False) -> str:
+        s = f'{" " * level}{self.__class__.__name__:20s}\n'
         if properties:
             for k, v in self.__dict__.items():
                 if k[0] != '_' and k[1] != '_':
-                    print(f'{" " * level}- {k:20s} {v}')
+                    s += f'{" " * level}- {k:20s} {v}\n'
         for c in self.children:
-            c.print(level + 1, properties)
+            s += c.dump(level + 1, properties)
 
     def walk(self):
         yield self
@@ -87,15 +90,14 @@ class LexicalNode(Node):
     def raw(self) -> str:
         return ''.join(list(map(lambda x: x.text, self.tokens)))
 
-    def print(self, level: int = 0, properties: bool = False) -> None:
-        print(
-            f'{" " * level}{self.__class__.__name__:20s}{bytearray(self.raw(), encoding="utf-8")}')
+    def dump(self, level: int = 0, properties: bool = False) -> str:
+        s = f'{" " * level}{self.__class__.__name__:20s}{bytearray(self.raw(), encoding="utf-8")}\n'
         if properties:
             for k, v in self.__dict__.items():
                 if k[0] != '_' and k[1] != '_':
-                    print(f'{" " * level}- {k:20s} {v}')
+                    s += f'{" " * level}- {k:20s} {v}\n'
         for c in self.children:
-            c.print(level + 1, properties)
+            s += c.dump(level + 1, properties)
 
 
 class BinaryNode(Node):
