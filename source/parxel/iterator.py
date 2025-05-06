@@ -35,11 +35,12 @@ class Iterator:
 
         return self.get()
 
-    def advance(self, distance: int):
-        el = None
-        for _ in range(distance):
-            el = self.next()
-        return el
+    def advance(self, distance: int) -> list:
+        els : list = [None] * distance
+        for i in range(distance):
+            els[i] = self.get()
+            self.next()
+        return els
 
     def peek(self, distance: int = 1) -> list | None:
         if self.pos + distance < self.end:

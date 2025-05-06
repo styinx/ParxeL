@@ -50,6 +50,8 @@ class Node:
                     s += f'{" " * level}- {k:20s} {v}\n'
         for c in self.children:
             s += c.dump(level + 1, properties)
+        
+        return s
 
     def walk(self):
         yield self
@@ -98,6 +100,8 @@ class LexicalNode(Node):
                     s += f'{" " * level}- {k:20s} {v}\n'
         for c in self.children:
             s += c.dump(level + 1, properties)
+        
+        return s
 
 
 class BinaryNode(Node):

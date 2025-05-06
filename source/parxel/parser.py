@@ -7,29 +7,23 @@ from parxel.nodes import Node, Document
 from parxel.lexer import Lexer
 
 
-class BinaryParser(Iterator):
+logger = getLogger(__name__)
+
+
+class Parser(Iterator):
     def __init__(self,
-        bytes: bytes = None,
+        iterable: list = None,
         root: Node = None,
         filename: str = None,
         filepath: Path = None,
         file: FileIO = None,
-        logger: Logger = None):
+        logger: Logger = logger):
 
-        if not logger:
-            logger = getLogger(__name__)
+        Iterator.__init__(self, iterable=iterable)
+
         self.logger = logger
-
-        if filename:
-            filepath = Path(filename)
-
-        if filepath:
-            file = filepath.open('rb')
-        
-        if file:
-            bytes = file.read()
-
-        Iterator.__init__(self, iterable=bytes)
+        self.filename = filename
+        self.file = file
 
         if filepath:
             self.filepath: Path = filepath
@@ -43,9 +37,50 @@ class BinaryParser(Iterator):
         # Current Node
         self.nbeg: int = 0
         self.nend: int = 0
+
+    def parse(self) -> Node | Document:
+        if self.filepath:
+            self.logger.debug(f'Processing {self.filepath} ...')
+        return self.parse_format()
     
-    def consumen(self, len: int) -> bool:
-        self.advance(len)
+    def parse_format(self):
+        raise NotImplementedError('Implement the "parse_format" method!')
+    
+    @classmethod
+    def read(cls: type, filename: str = None, filepath: Path = None, file: FileIO = None, stream: StringIO = None):
+
+        lexer = Lexer(filename, filepath, file, stream)
+        tokens: list[Token] = lexer.tokenize()
+
+        obj = cls(filepath, tokens)
+        return obj.parse()
+
+
+class BinaryParser(Parser):
+    def __init__(self,
+        buffer: bytes = None,
+        root: Node = None,
+        filename: str = None,
+        filepath: Path = None,
+        file: FileIO = None,
+        logger: Logger = logger):
+
+        if filename:
+            filepath = Path(filename)
+
+        if filepath:
+            file = filepath.open('rb')
+        
+        if file:
+            buffer = file.read()
+
+        Parser.__init__(self, iterable=buffer, root=root, filename=filename, filepath=filepath, file=file, logger=logger)
+    
+    def int32(self, byteorder: str = 'little') -> int:
+        return int.from_bytes(self.advance(4), byteorder=byteorder)
+    
+    def string(self, len: int, encoding: str = 'utf-8') -> str:
+        return bytes(self.advance(len)).decode(encoding)
     
     def collect_bytes(self) -> bytes:
         self.nbeg = self.nend  # End of last node
@@ -53,7 +88,7 @@ class BinaryParser(Iterator):
         return self.buffer[self.nbeg:self.nend]
 
 
-class TextParser(Iterator):
+class TextParser(Parser):
     class EmptyStreamException(Exception):
         def __init__(self, *args):
             super().__init__(*args)
@@ -69,11 +104,7 @@ class TextParser(Iterator):
         filepath: Path = None,
         file: FileIO = None,
         stream: StringIO = None,
-        logger: Logger = None):
-
-        if not logger:
-            logger = getLogger(__name__)
-        self.logger = logger
+        logger: Logger = logger):
 
         if filename:
             filepath = Path(filename)
@@ -86,27 +117,14 @@ class TextParser(Iterator):
         
         if not stream:
             file_name = '' if file is None else f'"{file.name}"'
-            self.logger.error(f'Empty stream {file_name}')
+            logger.error(f'Empty stream {file_name}')
             raise TextParser.EmptyStreamException(f'No input given to parser! f{file_name}')
 
         if not tokens:
             lexer = Lexer(filename=filename, filepath=filepath, file=file, stream=stream)
             tokens = lexer.tokenize()
 
-        Iterator.__init__(self, iterable=tokens)
-
-        if filepath:
-            self.filepath: Path = filepath
-            self.root = Document(filepath)
-        else:
-            self.root = Node()
-        
-        if root:
-            self.root = root
-
-        # Current Node
-        self.nbeg: int = 0
-        self.nend: int = 0
+        Parser.__init__(self, iterable=tokens, root=root, filename=filename, filepath=filepath, file=file, logger=logger)
 
     def consume(self, type: TK) -> bool:
         if self.get() and self.get().type == type:
@@ -170,20 +188,3 @@ class TextParser(Iterator):
 
         self.logger.error(f'Unexpected token {self.filepath}: Expected \'{expected}\' got \'{tokens[-1].text}\'')
         raise TextParser.UnexpectedTokenException(msg)
-
-    def parse(self) -> Node | Document:
-        if self.filepath:
-            self.logger.debug(f'Processing {self.filepath} ...')
-        return self.parse_format()
-    
-    def parse_format(self):
-        raise NotImplementedError('Implement the "parse_format" method!')
-    
-    @classmethod
-    def read(cls: type, filename: str = None, filepath: Path = None, file: FileIO = None, stream: StringIO = None):
-
-        lexer = Lexer(filename, filepath, file, stream)
-        tokens: list[Token] = lexer.tokenize()
-
-        obj = cls(filepath, tokens)
-        return obj.parse()
