@@ -77,39 +77,52 @@ class BinaryParser(Parser):
             buffer = file.read()
 
         Parser.__init__(self, iterable=buffer, root=root, filename=filename, filepath=filepath, file=file, logger=logger)
+
+    def advance(self, distance: int) -> bytes:
+        els : bytearray = bytearray(distance)
+        for i in range(distance):
+            els[i] = self.get() or 0
+            self.next()
+        return els
+
+    def byte(self) -> int:
+        return self.next() or 0
+
+    def bytes(self, distance: int) -> bytes:
+        return self.advance(distance)
     
     def int16(self, byteorder: str = 'little') -> int:
-        return int.from_bytes(self.advance(2), byteorder=byteorder)
+        return int.from_bytes(self.bytes(2), byteorder=byteorder)
 
     def int16_array(self, size: int, byteorder: str = 'little') -> list[int]:
         return [self.int16(byteorder) for _ in range(size)]
     
     def int32(self, byteorder: str = 'little') -> int:
-        return int.from_bytes(self.advance(4), byteorder=byteorder)
+        return int.from_bytes(self.bytes(4), byteorder=byteorder)
 
     def int32_array(self, size: int, byteorder: str = 'little') -> list[int]:
         return [self.int32(byteorder) for _ in range(size)]
     
     def int64(self, byteorder: str = 'little') -> int:
-        return int.from_bytes(self.advance(8), byteorder=byteorder)
+        return int.from_bytes(self.bytes(8), byteorder=byteorder)
 
     def int64_array(self, size: int, byteorder: str = 'little') -> list[int]:
         return [self.int64(byteorder) for _ in range(size)]
     
     def float32(self, byteorder: str = '<') -> float:
-        return unpack(byteorder + 'f', self.advance(4))[0]
+        return unpack(byteorder + 'f', self.bytes(4))[0]
 
     def float32_array(self, size: int, byteorder: str = '<') -> list[float]:
-        return unpack(byteorder + ('f' * size), self.advance(size * 4))
+        return unpack(byteorder + ('f' * size), self.bytes(size * 4))
     
     def float64(self, byteorder: str = '<') -> float:
-        return unpack(byteorder + 'd', self.advance(8))[0]
+        return unpack(byteorder + 'd', self.bytes(8))[0]
 
     def float64_array(self, size: int, byteorder: str = '<') -> list[float]:
-        return unpack(byteorder + ('d' * size), self.advance(size * 8))
+        return unpack(byteorder + ('d' * size), self.bytes(size * 8))
     
-    def string(self, len: int, encoding: str = 'utf-8') -> str:
-        return bytes(self.advance(len)).decode(encoding)
+    def string(self, size: int, encoding: str = 'utf-8') -> str:
+        return self.bytes(size).decode(encoding)
     
     def collect_bytes(self) -> bytes:
         self.nbeg = self.nend  # End of last node
