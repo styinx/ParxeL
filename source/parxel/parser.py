@@ -32,7 +32,7 @@ class Parser(Iterator):
             self.root = Document(filepath)
         else:
             self.root = Node()
-        
+
         if root:
             self.root = root
 
@@ -44,10 +44,10 @@ class Parser(Iterator):
         if self.filepath:
             self.logger.debug(f'Processing {self.filepath} ...')
         return self.parse_format()
-    
+
     def parse_format(self):
         raise NotImplementedError('Implement the "parse_format" method!')
-    
+
     @classmethod
     def read(cls: type, filename: str = None, filepath: Path = None, file: FileIO = None, stream: StringIO = None):
 
@@ -72,13 +72,13 @@ class BinaryParser(Parser):
 
         if filepath:
             file = filepath.open('rb')
-        
+
         if file:
             buffer = file.read()
 
         Parser.__init__(self, iterable=buffer, root=root, filename=filename, filepath=filepath, file=file, logger=logger)
 
-    def advance(self, distance: int) -> bytes:
+    def advance(self, distance: int) -> bytearray:
         els : bytearray = bytearray(distance)
         for i in range(distance):
             els[i] = self.get() or 0
@@ -88,43 +88,43 @@ class BinaryParser(Parser):
     def byte(self) -> int:
         return self.next() or 0
 
-    def bytes(self, distance: int) -> bytes:
+    def bytes(self, distance: int) -> bytearray:
         return self.advance(distance)
-    
+
     def int16(self, byteorder: str = 'little') -> int:
         return int.from_bytes(self.bytes(2), byteorder=byteorder)
 
     def int16_array(self, size: int, byteorder: str = 'little') -> list[int]:
         return [self.int16(byteorder) for _ in range(size)]
-    
+
     def int32(self, byteorder: str = 'little') -> int:
         return int.from_bytes(self.bytes(4), byteorder=byteorder)
 
     def int32_array(self, size: int, byteorder: str = 'little') -> list[int]:
         return [self.int32(byteorder) for _ in range(size)]
-    
+
     def int64(self, byteorder: str = 'little') -> int:
         return int.from_bytes(self.bytes(8), byteorder=byteorder)
 
     def int64_array(self, size: int, byteorder: str = 'little') -> list[int]:
         return [self.int64(byteorder) for _ in range(size)]
-    
+
     def float32(self, byteorder: str = '<') -> float:
         return unpack(byteorder + 'f', self.bytes(4))[0]
 
     def float32_array(self, size: int, byteorder: str = '<') -> list[float]:
         return unpack(byteorder + ('f' * size), self.bytes(size * 4))
-    
+
     def float64(self, byteorder: str = '<') -> float:
         return unpack(byteorder + 'd', self.bytes(8))[0]
 
     def float64_array(self, size: int, byteorder: str = '<') -> list[float]:
         return unpack(byteorder + ('d' * size), self.bytes(size * 8))
-    
+
     def string(self, size: int, encoding: str = 'utf-8') -> str:
         return self.bytes(size).decode(encoding)
-    
-    def collect_bytes(self) -> bytes:
+
+    def collect_bytes(self) -> byte:
         self.nbeg = self.nend  # End of last node
         self.nend = self.pos  # End of current node
         return self.buffer[self.nbeg:self.nend]
@@ -153,10 +153,10 @@ class TextParser(Parser):
 
         if filepath:
             file = filepath.open('r')
-        
+
         if file:
             stream = file.read()
-        
+
         if not stream:
             file_name = '' if file is None else f'"{file.name}"'
             logger.error(f'Empty stream {file_name}')

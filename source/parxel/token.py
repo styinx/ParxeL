@@ -1,5 +1,5 @@
 class TK:
-    def __class_getitem__(klass, sym: str) -> int:
+    def __class_getitem__(cls, sym: str) -> int:
         for k, v in TK.__dict__.items():
             if v == sym:
                 return TK.__dict__[k]

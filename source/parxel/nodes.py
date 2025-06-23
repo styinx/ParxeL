@@ -1,11 +1,12 @@
-from pathlib import Path
 from hashlib import md5
-from parxel.token import Token
 from networkx import Graph
+from pathlib import Path
+
+from parxel.token import Token
 
 
 class Node:
-    def __init__(self, parent=None):
+    def __init__(self, parent = None):
         self.parent: Node = parent
         self.children: list[Node] = []
         self.scope: Node = self
@@ -15,7 +16,7 @@ class Node:
 
     def type(self) -> str:
         return self.__class__.__name__
-    
+
     def hash(self, *tweak: str):
         hash_string = ''
         hash_string += self.type()
@@ -25,7 +26,7 @@ class Node:
 
         for child in self.children:
             hash_string += child.hash()
-        
+
         return md5(hash_string.encode('utf-8')).hexdigest()
 
     def add(self, other) -> None:
@@ -42,6 +43,19 @@ class Node:
     def add_to_scope(self, other) -> None:
         self.scope.add(other)
 
+    def find(self, node_type):
+        for child in self.children:
+            if isinstance(child, node_type):
+                return child
+        return None
+
+    def find_all(self, node_type):
+        matches = []
+        for child in self.children:
+            if isinstance(child, node_type):
+                matches.append(child)
+        return matches
+
     def dump(self, level: int = 0, properties: bool = False) -> str:
         s = f'{" " * level}{self.__class__.__name__:20s}\n'
         if properties:
@@ -50,7 +64,7 @@ class Node:
                     s += f'{" " * level}- {k:20s} {v}\n'
         for c in self.children:
             s += c.dump(level + 1, properties)
-        
+
         return s
 
     def walk(self):
@@ -65,7 +79,7 @@ class Folder(Node):
         Node.__init__(self, parent=parent)
 
         self.path: Path = path
-    
+
     def hash(self, *tweak: str):
         return super().hash(str(self.path), tweak)
 
@@ -75,7 +89,7 @@ class Document(Node):
         Node.__init__(self, parent=parent)
 
         self.filepath: Path = filepath
-    
+
     def hash(self, *tweak: str):
         return super().hash(str(self.filepath), tweak)
 
@@ -85,7 +99,7 @@ class LexicalNode(Node):
         Node.__init__(self, parent=parent)
 
         self.tokens: list[Token] = tokens
-    
+
     def hash(self, *tweak: str):
         return super().hash(self.raw(), tweak)
 
@@ -100,7 +114,7 @@ class LexicalNode(Node):
                     s += f'{" " * level}- {k:20s} {v}\n'
         for c in self.children:
             s += c.dump(level + 1, properties)
-        
+
         return s
 
 
@@ -109,6 +123,6 @@ class BinaryNode(Node):
         Node.__init__(self, parent=parent)
 
         self.bytes: bytes = blob
-    
+
     def hash(self, *tweak: str):
         return super().hash(self.bytes, tweak)
