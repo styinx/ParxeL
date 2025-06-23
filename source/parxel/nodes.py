@@ -56,6 +56,33 @@ class Node:
                 matches.append(child)
         return matches
 
+    def find_nested(self, node_type):
+        try:
+            it = self.walk()
+            while it:
+                node = next(it)
+                if isinstance(node, node_type):
+                    return node
+
+        except StopIteration:
+            pass
+
+        return None
+
+    def find_all_nested(self, node_type):
+        matches = []
+        try:
+            it = self.walk()
+            while it:
+                node = next(it)
+                if isinstance(node, node_type):
+                    matches.append(node)
+
+        except StopIteration:
+            pass
+
+        return matches
+
     def dump(self, level: int = 0, properties: bool = False) -> str:
         s = f'{" " * level}{self.__class__.__name__:20s}\n'
         if properties:
