@@ -83,14 +83,15 @@ class Node:
 
         return matches
 
-    def dump(self, level: int = 0, properties: bool = False) -> str:
+    def dump(self, level: int = 0, recursive: bool = False, properties: bool = False) -> str:
         s = f'{" " * level}{self.__class__.__name__:20s}\n'
         if properties:
             for k, v in self.__dict__.items():
                 if k[0] != '_' and k[1] != '_':
                     s += f'{" " * level}- {k:20s} {v}\n'
-        for c in self.children:
-            s += c.dump(level + 1, properties)
+        if recursive:
+            for c in self.children:
+                s += c.dump(level + 1, properties)
 
         return s
 
@@ -132,17 +133,6 @@ class LexicalNode(Node):
 
     def raw(self) -> str:
         return ''.join(list(map(lambda x: x.text, self.tokens)))
-
-    def dump(self, level: int = 0, properties: bool = False) -> str:
-        s = f'{" " * level}{self.__class__.__name__:20s}{bytearray(self.raw(), encoding="utf-8")}\n'
-        if properties:
-            for k, v in self.__dict__.items():
-                if k[0] != '_' and k[1] != '_':
-                    s += f'{" " * level}- {k:20s} {v}\n'
-        for c in self.children:
-            s += c.dump(level + 1, properties)
-
-        return s
 
 
 class BinaryNode(Node):
