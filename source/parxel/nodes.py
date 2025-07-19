@@ -1,11 +1,13 @@
 from hashlib import md5
 from networkx import Graph
 from pathlib import Path
+import re
 
 from parxel.token import Token
 
-
 class Node:
+    RE_PATH = re.compile(r'(\*|\w+)(?:\[(\w+)=(.*?)\])?')
+
     def __init__(self, parent = None):
         self.parent: Node = parent
         self.children: list[Node] = []
@@ -82,6 +84,36 @@ class Node:
             pass
 
         return matches
+
+    def find_path(self, path: str):
+        def get_path_part(part: str):
+            m = re.match(Node.RE_PATH, part)
+            if not m:
+                raise ValueError(f"Invalid path: {part}")
+            return m.groups()  # (type, key, val)
+
+        def matches_path(node: "Node", part: tuple) -> bool:
+            node_type, key, val = part
+            if node_type not in (node.type(), '*'):
+                return False
+            if key:
+                if not hasattr(node, key):
+                    return False
+                return getattr(node, key) == eval(val)
+            return True
+
+        parts = [get_path_part(p) for p in path.strip().split('/') if p]
+
+        def recurse(node: Node, idx: int):
+            if idx >= len(parts):
+                return [node]
+            result = []
+            for child in node.children:
+                if matches_path(child, parts[idx]):
+                    result.extend(recurse(child, idx + 1))
+            return result
+
+        return recurse(self, 0)
 
     def dump(self, level: int = 0, recursive: bool = False, properties: bool = False) -> str:
         s = f'{" " * level}{self.__class__.__name__:20s}\n'
