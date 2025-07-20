@@ -6,7 +6,7 @@ import re
 from parxel.token import Token
 
 class Node:
-    RE_PATH = re.compile(r'(\*|\w+)(?:\[(\w+)=(.*?)\])?')
+    RE_PATH = re.compile(r'(\*|\w+)(?:\[(\w+)\s*(=|!=|in|not in)\s*(.*?)\])?')
 
     def __init__(self, parent = None):
         self.parent: Node = parent
@@ -90,16 +90,31 @@ class Node:
             m = re.match(Node.RE_PATH, part)
             if not m:
                 raise ValueError(f"Invalid path: {part}")
-            return m.groups()  # (type, key, val)
+            return m.groups()  # (type, key, op, val)
 
         def matches_path(node: "Node", part: tuple) -> bool:
-            node_type, key, val = part
+            node_type, key, op, val = part
+
             if node_type not in (node.type(), '*'):
                 return False
+
             if key:
                 if not hasattr(node, key):
                     return False
-                return getattr(node, key) == eval(val)
+
+                value = eval(val)
+                attr = getattr(node, key)
+
+                match op:
+                    case '=':
+                        return attr == value
+                    case '!=':
+                        return attr != value
+                    case 'in':
+                        return attr in value
+                    case 'not in':
+                        return attr not in value
+
             return True
 
         parts = [get_path_part(p) for p in path.strip().split('/') if p]
