@@ -13,12 +13,12 @@ class TK:
 
     Symbols = [
         ExclamationMark, QuotationMark, NumberSign, ParanthesisOpen, ParanthesisClose,
-        Asterisk, Minus, Period, Slash, Colon, Semicolon,
+        Asterisk, Plus, Comma, Minus, Period, Slash, Colon, Semicolon,
         EqualSign, SquareBracketOpen, Backslash, SquareBracketClose,
         Backtick, CurlyBracketOpen, VerticalBar, CurlyBracketClose
     ] = [
         '!', '"', '#', '(', ')',
-        '*', '-', '.', '/', ':', ';',
+        '*', '+', ',' '-', '.', '/', ':', ';',
         '=', '[', '\\', ']',
         '`', '{', '|', '}'
     ]
