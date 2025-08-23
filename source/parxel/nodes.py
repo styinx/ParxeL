@@ -138,7 +138,7 @@ class Node:
                     s += f'{" " * level}- {k:20s} {v}\n'
         if recursive:
             for c in self.children:
-                s += c.dump(level + 1, properties)
+                s += c.dump(level + 1, recursive, properties)
 
         return s
 
