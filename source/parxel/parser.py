@@ -184,24 +184,48 @@ class TextParser(Parser):
             return True
         return False
 
-    def consume_until(self, type: TK) -> None:
+    def consume_until(self, type: TK) -> bool:
+        pos = self.pos
         while self.get() and self.get().type != type:
             self.next()
+        return self.pos - pos > 0
 
-    def consume_until_any(self, types: list[TK]) -> None:
+    def consume_until_any(self, types: list[TK]) -> bool:
+        pos = self.pos
         while self.get() and self.get().type not in types:
             self.next()
+        return self.pos - pos > 0
 
-    def consume_while(self, type: TK) -> None:
+    def consume_while(self, type: TK) -> bool:
+        pos = self.pos
         while self.get() and self.get().type == type:
             self.next()
+        return self.pos - pos > 0
 
-    def consume_while_any(self, types: list[TK]) -> None:
+    def consume_while_any(self, types: list[TK]) -> bool:
+        pos = self.pos
         while self.get() and self.get().type in types:
             self.next()
+        return self.pos - pos > 0
 
     def discard(self) -> list[Token]:
         self.next()
+        return self.collect_tokens()
+
+    def discard_until(self, type: TK) -> list[Token]:
+        self.consume_until(type)
+        return self.collect_tokens()
+
+    def discard_until_any(self, types: list[TK]) -> list[Token]:
+        self.consume_until_any(types)
+        return self.collect_tokens()
+
+    def discard_while(self, type: TK) -> list[Token]:
+        self.consume_while(type)
+        return self.collect_tokens()
+
+    def discard_while_any(self, types: list[TK]) -> list[Token]:
+        self.consume_while_any(types)
         return self.collect_tokens()
 
     def number_of_tokens(self) -> int:
@@ -209,6 +233,9 @@ class TextParser(Parser):
 
     def tokens(self) -> list[Token]:
         return self.buffer[self.nend:self.pos + 1]
+
+    def token_position(self) -> int:
+        return sum(map(lambda x: len(x.text), self.buffer[:self.pos]))
 
     def collect_tokens(self) -> list[Token]:
         self.nbeg = self.nend  # End of last node
