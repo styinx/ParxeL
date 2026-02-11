@@ -1,5 +1,4 @@
 from hashlib import md5
-from networkx import Graph
 from pathlib import Path
 import re
 
@@ -15,6 +14,9 @@ class Node:
 
         if parent:
             parent.add(self)
+
+    def __iter__(self):
+        return iter(self.children)
 
     def type(self) -> str:
         return self.__class__.__name__
